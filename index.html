@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScanPrint — Phase 1–6 Print Platform</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{font-family:'Plus Jakarta Sans',sans-serif;background:#070b14;color:#e8eef8}
+.glass{background:rgba(14,21,35,.68);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.10);box-shadow:0 18px 60px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.06)}
+.glass2{background:rgba(20,29,48,.48);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08)}
+.btn{transition:.2s}.btn:hover{transform:translateY(-1px)}.active{border-color:#22d3ee!important;background:rgba(34,211,238,.10)!important;box-shadow:0 0 25px rgba(34,211,238,.12)}
+input,select{outline:none}.mono{font-family:'JetBrains Mono',monospace}.hide{display:none!important}
+.bg-orb{position:fixed;border-radius:999px;filter:blur(100px);pointer-events:none;opacity:.16;z-index:-1}
+</style>
+</head>
+<body class="min-h-screen">
+<div class="bg-orb w-96 h-96 bg-cyan-500 -top-32 left-1/4"></div><div class="bg-orb w-[28rem] h-[28rem] bg-violet-600 bottom-0 right-0"></div>
+<header class="sticky top-0 z-40 glass px-4 py-3">
+ <div class="max-w-7xl mx-auto flex flex-wrap gap-3 items-center justify-between">
+  <div class="flex items-center gap-3"><div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-black text-xl">🖨️</div>
+   <div><div class="font-extrabold text-lg">ScanPrint <span class="text-cyan-300">PRO</span></div><div class="text-[10px] text-slate-400">PHASE 1–6 · MULTI-SHOP READY</div></div>
+  </div>
+  <div class="flex items-center gap-2"><select id="langSelect" class="glass2 rounded-lg px-2 py-2 text-[10px] bg-transparent"><option value="hi">हिन्दी</option><option value="mr">मराठी</option><option value="en">English</option></select><div class="flex gap-2 p-1 glass2 rounded-xl"><button id="customerTab" onclick="showView('customer')" class="btn px-4 py-2 rounded-lg bg-cyan-400 text-black text-xs font-bold">Customer</button><button id="ownerTab" onclick="showView('owner')" class="btn px-4 py-2 rounded-lg text-xs font-bold">Owner Dashboard</button></div>
+ </div>
+</header>
+
+<main class="max-w-7xl mx-auto p-4 md:p-6">
+<section id="customerView">
+ <div class="glass rounded-3xl p-5 md:p-7 mb-5">
+  <div class="flex flex-col lg:flex-row justify-between gap-5">
+   <div><span class="text-cyan-300 text-xs font-bold tracking-[.2em]">SMART DOCUMENT PRINTING</span><h1 class="text-3xl md:text-5xl font-extrabold mt-2">Upload → Configure → Pay → Print</h1><p class="text-slate-400 mt-3 text-sm">PDF, Word, PowerPoint, Excel & images · automatic page count · live price · QR payment · print token.</p></div>
+   <div class="glass2 rounded-2xl p-4 min-w-[210px]"><div class="text-[10px] text-slate-500">SHOP</div><select id="shopSelect" class="w-full bg-transparent font-bold mt-1"></select><div id="shopStatus" class="text-xs text-emerald-300 mt-2">● Online</div></div>
+  </div>
+ </div>
+
+ <div class="grid lg:grid-cols-[1.15fr_.85fr] gap-5">
+  <div class="space-y-5">
+   <div class="glass rounded-3xl p-5">
+    <div class="flex justify-between items-center"><div><div class="text-xs text-cyan-300 font-bold">01 · UPLOAD DOCUMENT</div><h2 class="text-xl font-bold mt-1">Choose your file</h2></div><span class="text-[10px] px-2 py-1 rounded-full glass2">MAX 50 MB</span></div>
+    <label class="mt-5 block border-2 border-dashed border-cyan-400/30 hover:border-cyan-300/70 rounded-2xl p-8 text-center cursor-pointer transition">
+      <input id="fileInput" type="file" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
+      <div class="text-4xl">📄</div><div class="font-bold mt-2">Tap to upload document</div><div class="text-xs text-slate-500 mt-1">PDF · JPG · PNG · DOCX · PPTX · XLSX</div>
+    </label>
+    <div id="fileInfo" class="hidden mt-4 glass2 rounded-2xl p-4"></div>
+    <div id="conversionBox" class="hidden mt-3 rounded-2xl border border-amber-400/30 bg-amber-400/5 p-4"><div class="font-bold text-amber-300">Office file detected</div><div class="text-xs text-slate-400 mt-1">Server will try LibreOffice conversion before printing.</div><button onclick="convertOffice()" class="btn mt-3 px-4 py-2 rounded-xl bg-amber-400 text-black text-xs font-bold">Convert to PDF</button></div>
+   </div>
+
+   <div class="glass rounded-3xl p-5">
+    <div class="text-xs text-cyan-300 font-bold">02 · PRINT OPTIONS</div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+      <button id="bwBtn" onclick="setMode('bw')" class="opt glass2 active rounded-2xl p-4 text-left"><div>⚫</div><b>B&W</b><div id="bwRate" class="text-xs text-slate-400">₹2/page</div></button>
+      <button id="colorBtn" onclick="setMode('color')" class="opt glass2 rounded-2xl p-4 text-left"><div>🌈</div><b>Colour</b><div id="colorRate" class="text-xs text-slate-400">₹8/page</div></button>
+      <button id="simplexBtn" onclick="setDuplex(false)" class="opt glass2 rounded-2xl p-4 text-left"><div>📄</div><b>Single side</b><div class="text-xs text-slate-400">Simplex</div></button>
+      <button id="duplexBtn" onclick="setDuplex(true)" class="opt glass2 active rounded-2xl p-4 text-left"><div>📚</div><b>Both sides</b><div class="text-xs text-slate-400">Duplex</div></button>
+    </div>
+    <div class="grid md:grid-cols-3 gap-3 mt-4">
+      <label class="glass2 rounded-xl p-3"><span class="text-[10px] text-slate-500">COPIES</span><div class="flex justify-between items-center mt-1"><button onclick="changeCopies(-1)" class="w-8 h-8 rounded-lg bg-white/5">−</button><span id="copies" class="font-bold">1</span><button onclick="changeCopies(1)" class="w-8 h-8 rounded-lg bg-white/5">+</button></div></label>
+      <label class="glass2 rounded-xl p-3"><span class="text-[10px] text-slate-500">PAGE RANGE</span><input id="pageRange" placeholder="e.g. 1-5,8" class="w-full bg-transparent mt-1 text-sm"></label>
+      <label class="glass2 rounded-xl p-3"><span class="text-[10px] text-slate-500">LAYOUT</span><select id="layout" onchange="recalc()" class="w-full bg-transparent mt-1 text-sm"><option value="normal">Normal</option><option value="2in1">2-in-1</option><option value="4in1">4-in-1</option></select></label>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
+      <label class="glass2 p-3 rounded-xl flex items-center gap-2"><input id="blankRemove" type="checkbox"> <span class="text-xs">Remove blank pages</span></label>
+      <label class="glass2 p-3 rounded-xl flex items-center gap-2"><input id="preview" type="checkbox" checked> <span class="text-xs">Preview before print</span></label>
+      <label class="glass2 p-3 rounded-xl flex items-center gap-2"><input id="autoCrop" type="checkbox"> <span class="text-xs">Auto-crop document</span></label>
+      <label class="glass2 p-3 rounded-xl flex items-center gap-2"><input id="detectColor" type="checkbox" checked> <span class="text-xs">Detect colour pages</span></label>
+    </div>
+   </div>
+
+   <div class="glass rounded-3xl p-5">
+    <div class="text-xs text-cyan-300 font-bold">03 · EXTRA SERVICES</div>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+      <button onclick="toggleService('photo4x6',15,this)" class="service glass2 rounded-xl p-3 text-left text-xs">📸 4×6 Photo<br><b>₹15</b></button>
+      <button onclick="toggleService('photo5x7',25,this)" class="service glass2 rounded-xl p-3 text-left text-xs">🖼️ 5×7 Photo<br><b>₹25</b></button>
+      <button onclick="toggleService('binding',30,this)" class="service glass2 rounded-xl p-3 text-left text-xs">📚 Binding<br><b>₹30</b></button>
+      <button onclick="toggleService('lamination',20,this)" class="service glass2 rounded-xl p-3 text-left text-xs">🛡️ Lamination<br><b>₹20</b></button>
+      <button onclick="toggleService('stapling',5,this)" class="service glass2 rounded-xl p-3 text-left text-xs">📎 Stapling<br><b>₹5</b></button>
+    </div>
+   </div>
+  </div>
+
+  <div class="space-y-5">
+   <div class="glass rounded-3xl p-5 sticky top-24">
+    <div class="text-xs text-cyan-300 font-bold">04 · BILL SUMMARY</div>
+    <div class="mt-4 space-y-3 text-sm"><div class="flex justify-between"><span class="text-slate-400">Pages</span><b id="pagesLine">0</b></div><div class="flex justify-between"><span class="text-slate-400">Copies</span><b id="copiesLine">1</b></div><div class="flex justify-between"><span class="text-slate-400">Print</span><b id="printTotal">₹0.00</b></div><div class="flex justify-between"><span class="text-slate-400">Services</span><b id="servicesTotal">₹0.00</b></div><div class="flex justify-between"><span class="text-slate-400">Tax</span><b id="taxTotal">₹0.00</b></div><div class="flex justify-between"><span class="text-slate-400">Discount</span><b id="discountTotal">−₹0.00</b></div></div>
+    <div class="border-t border-white/10 mt-4 pt-4 flex justify-between items-end"><span class="font-bold">TOTAL</span><span id="grandTotal" class="text-3xl font-extrabold text-cyan-300">₹0.00</span></div>
+    <div class="grid grid-cols-2 gap-2 mt-4"><button onclick="pay('UPI')" class="btn rounded-xl py-3 bg-emerald-500 text-black font-extrabold text-xs">📱 UPI / QR</button><button onclick="pay('RAZORPAY')" class="btn rounded-xl py-3 bg-blue-500 text-white font-extrabold text-xs">💳 Razorpay</button></div>
+    <div class="mt-3 text-center text-[10px] text-slate-500">Payment unlocks the print token & PIN</div>
+   </div>
+   <div id="qrBox" class="hidden glass rounded-3xl p-5 text-center"><div class="text-xs text-emerald-300 font-bold">SCAN TO PAY</div><div id="qrcode" class="bg-white p-3 rounded-2xl inline-block mt-3"></div><div id="qrText" class="text-xs text-slate-400 mt-2"></div><button onclick="markPaid('UPI')" class="btn mt-3 px-5 py-2 rounded-xl bg-emerald-400 text-black text-xs font-bold">I HAVE PAID</button></div>
+  </div>
+ </div>
+
+ <div id="orderBox" class="hidden mt-5 glass rounded-3xl p-5">
+   <div class="flex flex-col md:flex-row justify-between gap-4"><div><div class="text-xs text-emerald-300 font-bold">ORDER CREATED</div><div id="orderToken" class="text-4xl font-extrabold mono mt-1"></div><div id="orderMeta" class="text-xs text-slate-400 mt-1"></div></div><div class="text-right"><div class="text-xs text-slate-500">RELEASE PIN</div><div id="releasePin" class="text-3xl font-extrabold text-amber-300 mono"></div></div></div>
+   <div class="grid md:grid-cols-3 gap-2 mt-4"><select id="fulfillmentType" class="glass2 rounded-xl p-3 text-xs"><option value="counter">Counter pickup</option><option value="pickup">Shop pickup</option><option value="delivery">Delivery</option></select><input id="deliveryAddress" placeholder="Delivery address (optional)" class="glass2 rounded-xl p-3 text-xs"><button onclick="saveFulfillment()" class="btn glass2 rounded-xl text-xs font-bold">Save Fulfillment</button></div><div class="grid sm:grid-cols-3 gap-3 mt-5"><button onclick="markPaid('UPI')" class="btn rounded-xl bg-emerald-500 text-black py-3 text-xs font-bold">Mark UPI Paid</button><button onclick="startPrint()" class="btn rounded-xl bg-cyan-400 text-black py-3 text-xs font-bold">🖨️ Start Print</button><button onclick="cancelOrder()" class="btn rounded-xl bg-red-500/20 text-red-300 py-3 text-xs font-bold">Cancel / Refund</button></div>
+   <div id="printStatus" class="mt-4 text-xs text-slate-400"></div>
+ </div>
+</section>
+
+<section id="ownerView" class="hide">
+ <div class="glass rounded-3xl p-5 md:p-7"><div class="flex flex-wrap justify-between gap-3"><div><div class="text-xs text-cyan-300 font-bold">OWNER COMMAND CENTER</div><h1 class="text-3xl font-extrabold mt-1">Business Dashboard</h1></div><button onclick="refreshDashboard()" class="btn px-4 py-2 rounded-xl glass2 text-xs font-bold">↻ Refresh</button></div>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-5"><div class="glass2 rounded-2xl p-4"><div class="text-xs text-slate-500">TODAY ORDERS</div><div id="statOrders" class="text-3xl font-extrabold mt-1">0</div></div><div class="glass2 rounded-2xl p-4"><div class="text-xs text-slate-500">REVENUE</div><div id="statRevenue" class="text-3xl font-extrabold text-emerald-300 mt-1">₹0</div></div><div class="glass2 rounded-2xl p-4"><div class="text-xs text-slate-500">COMPLETED</div><div id="statCompleted" class="text-3xl font-extrabold mt-1">0</div></div><div class="glass2 rounded-2xl p-4"><div class="text-xs text-slate-500">PENDING</div><div id="statPending" class="text-3xl font-extrabold text-amber-300 mt-1">0</div></div></div>
+ </div>
+ <div class="grid lg:grid-cols-3 gap-5 mt-5">
+  <div class="glass rounded-3xl p-5 lg:col-span-2"><div class="flex justify-between"><div class="font-bold">Orders / Token Queue</div><div class="text-xs text-slate-500">shop_id: <span id="shopIdLabel">SHOP-001</span></div></div><div id="ordersTable" class="mt-4 overflow-auto"></div></div>
+  <div class="glass rounded-3xl p-5"><div class="font-bold">Printer Status</div><div id="printerStatus" class="mt-4 space-y-2"></div><div class="font-bold mt-5">Inventory</div><div id="inventory" class="mt-3 space-y-2 text-xs"></div></div>
+ </div>
+ <div class="grid lg:grid-cols-2 gap-5 mt-5">
+  <div class="glass rounded-3xl p-5"><div class="font-bold">Rate & Service Controls</div><div class="grid grid-cols-2 gap-3 mt-4"><label class="text-xs">B&W/page<input id="rBw" class="w-full glass2 rounded-xl p-2 mt-1" type="number"></label><label class="text-xs">Colour/page<input id="rColor" class="w-full glass2 rounded-xl p-2 mt-1" type="number"></label><label class="text-xs">Tax<input id="rTax" class="w-full glass2 rounded-xl p-2 mt-1" type="number"></label><label class="text-xs">Discount<input id="rDisc" class="w-full glass2 rounded-xl p-2 mt-1" type="number"></label></div><button onclick="saveRates()" class="btn mt-4 w-full rounded-xl bg-cyan-400 text-black py-3 text-xs font-bold">Save Controls</button></div>
+  <div class="glass rounded-3xl p-5"><div class="font-bold">Operations</div><div class="grid grid-cols-2 gap-2 mt-4"><button onclick="exportDb()" class="btn glass2 rounded-xl p-3 text-xs">⬇️ Export Data</button><button onclick="cleanup()" class="btn glass2 rounded-xl p-3 text-xs">🧹 Auto-delete Old Files</button><button onclick="addStaff()" class="btn glass2 rounded-xl p-3 text-xs">👤 Add Staff</button><button onclick="addShop()" class="btn glass2 rounded-xl p-3 text-xs">🏪 Add Shop</button></div><div class="mt-4 text-[11px] text-slate-500">WhatsApp/SMS, Razorpay and silent USB printing need provider/device credentials. The UI and server hooks are included.</div></div>
+ </div>
+ <div class="glass rounded-3xl p-5 mt-5"><div class="font-bold">Phase Coverage</div><div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+  <div class="glass2 p-4 rounded-xl"><b class="text-cyan-300">Phase 1</b><div class="text-xs text-slate-400 mt-1">Upload · page count · price · UPI/Razorpay hook · token/status · owner dashboard · QR · auto-delete</div></div>
+  <div class="glass2 p-4 rounded-xl"><b class="text-cyan-300">Phase 2</b><div class="text-xs text-slate-400 mt-1">Office conversion · colour/B&W · 2-in-1/4-in-1 · preview · range · blank-page option · rates</div></div>
+  <div class="glass2 p-4 rounded-xl"><b class="text-cyan-300">Phase 3</b><div class="text-xs text-slate-400 mt-1">WhatsApp/SMS hook · sound/status · PIN · order data · cancel/refund workflow</div></div>
+  <div class="glass2 p-4 rounded-xl"><b class="text-cyan-300">Phase 4</b><div class="text-xs text-slate-400 mt-1">Photo/ID services · binding · lamination · stapling</div></div>
+  <div class="glass2 p-4 rounded-xl"><b class="text-cyan-300">Phase 5</b><div class="text-xs text-slate-400 mt-1">Reports · inventory · printer status · staff · auto-print agent hook</div></div>
+  <div class="glass2 p-4 rounded-xl"><b class="text-cyan-300">Phase 6</b><div class="text-xs text-slate-400 mt-1">shop_id · multi-shop · shop selector · nearest/pickup/delivery/wallet/i18n-ready architecture</div></div>
+ </div></div>
+</section>
+</main>
+<div id="toast" class="fixed bottom-5 right-5 z-50 glass rounded-2xl px-4 py-3 text-xs font-bold translate-y-20 opacity-0 transition"></div>
+
+<script>
+const S={pages:0,copies:1,mode:'bw',duplex:true,services:[],file:null,order:null,settings:{rateBw:2,rateColor:8,tax:1.5,discount:2},shop:'SHOP-001'};
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.classList.remove('translate-y-20','opacity-0');setTimeout(()=>e.classList.add('translate-y-20','opacity-0'),2800)}
+async function api(url,opt={}){const r=await fetch(url,{...opt,headers:{'Content-Type':'application/json',...(opt.body instanceof FormData?{}:{}),...(opt.headers||{}),'x-shop-id':S.shop}});let d={};try{d=await r.json()}catch{}if(!r.ok)throw Error(d.error||d.message||`HTTP ${r.status}`);return d}
+function showView(v){customerView.classList.toggle('hide',v!=='customer');ownerView.classList.toggle('hide',v!=='owner');customerTab.className=v==='customer'?'px-4 py-2 rounded-lg bg-cyan-400 text-black text-xs font-bold':'px-4 py-2 rounded-lg text-xs font-bold';ownerTab.className=v==='owner'?'px-4 py-2 rounded-lg bg-cyan-400 text-black text-xs font-bold':'px-4 py-2 rounded-lg text-xs font-bold';if(v==='owner')refreshDashboard()}
+function setMode(m){S.mode=m;bwBtn.classList.toggle('active',m==='bw');colorBtn.classList.toggle('active',m==='color');recalc()}
+function setDuplex(v){S.duplex=v;duplexBtn.classList.toggle('active',v);simplexBtn.classList.toggle('active',!v);recalc()}
+function changeCopies(d){S.copies=Math.max(1,S.copies+d);copies.textContent=S.copies;recalc()}
+function toggleService(id,price,el){const i=S.services.findIndex(x=>x.id===id);if(i>=0){S.services.splice(i,1);el.classList.remove('active')}else{S.services.push({id,price,qty:1});el.classList.add('active')}recalc()}
+function effectivePages(){if(!S.pages)return 0;const r=pageRange.value.trim();if(!r)return S.pages;let n=0;for(const part of r.split(',')){const [a,b]=part.split('-').map(Number);if(b&&b>=a)n+=Math.max(0,b-a+1);else if(a)n++}return Math.min(S.pages,Math.max(0,n))}
+function recalc(){const p=effectivePages(),rate=S.mode==='color'?S.settings.rateColor:S.settings.rateBw,layout=layoutEl.value==='2in1'?2:layoutEl.value==='4in1'?4:1,printPages=Math.ceil(p/layout),print=printPages*rate*S.copies,services=S.services.reduce((a,x)=>a+x.price*x.qty,0),tax=S.settings.tax,disc=Math.min(S.settings.discount,print+services+tax),total=Math.max(0,print+services+tax-disc);pagesLine.textContent=`${p}${layout>1?' → '+printPages+' sheets':''}`;copiesLine.textContent=S.copies;printTotal.textContent='₹'+print.toFixed(2);servicesTotal.textContent='₹'+services.toFixed(2);taxTotal.textContent='₹'+tax.toFixed(2);discountTotal.textContent='−₹'+disc.toFixed(2);grandTotal.textContent='₹'+total.toFixed(2);return total}
+const layoutEl=document.getElementById('layout');
+fileInput.addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const fd=new FormData();fd.append('document',f);toast('Uploading & reading document…');const d=await api('/api/upload',{method:'POST',body:fd});S.file=d;S.pages=d.pages||1;fileInfo.classList.remove('hidden');fileInfo.innerHTML=`<div class="font-bold">${esc(d.filename)}</div><div class="text-xs text-slate-400 mt-1">${d.pages?d.pages+' pages · ':''}${(d.size/1048576).toFixed(1)} MB · ${d.extension}</div>`;if(d.conversionRequired)conversionBox.classList.remove('hidden');else conversionBox.classList.add('hidden');recalc();toast(`✓ ${d.pages||1} page(s) detected`)}catch(e){toast('Upload failed: '+e.message)}});
+async function convertOffice(){if(!S.file)return;try{toast('Converting to PDF…');const d=await api('/api/convert',{method:'POST',body:JSON.stringify({fileId:S.file.fileId})});S.file=d;S.pages=d.pages;conversionBox.classList.add('hidden');fileInfo.innerHTML+=`<div class="text-emerald-300 text-xs mt-2">✓ Converted to PDF</div>`;recalc();toast('✓ PDF ready')}catch(e){toast(e.message)}}
+async function buildQr(amount,order){qrcode.innerHTML='';const cfg=await api('/api/payment-config');if(!cfg.upiVpa){qrText.textContent='UPI_VPA is not configured on the server.';return}const text=`upi://pay?pa=${encodeURIComponent(cfg.upiVpa)}&pn=${encodeURIComponent(cfg.payeeName||'ScanPrint')}&am=${amount.toFixed(2)}&tr=${encodeURIComponent(order.id)}&cu=INR`;new QRCode(qrcode,{text,width:190,height:190});qrText.textContent=`Order ${order.token} · ₹${amount.toFixed(2)} · ${cfg.upiVpa}`;return text}
+async function pay(method){try{if(!S.file)throw Error('Please upload a document first');const total=recalc();const order=await api('/api/orders',{method:'POST',body:JSON.stringify({fileId:S.file.fileId,filename:S.file.filename,pages:effectivePages(),copies:S.copies,colorMode:S.mode,duplex:S.duplex,layout:layoutEl.value,services:S.services,paymentMethod:method})});S.order=order;showOrder();if(method==='UPI'){qrBox.classList.remove('hidden');await buildQr(total,order);toast('UPI QR generated')}else{await openRazorpay(order)}}catch(e){toast(e.message)}}
+async function openRazorpay(order){const cfg=await api('/api/payment-config');if(!cfg.razorpayKeyId){toast('Razorpay key not configured. Use UPI QR.');return}const r=new Razorpay({key:cfg.razorpayKeyId,amount:Math.round(order.amount*100),currency:'INR',name:'ScanPrint',description:`Print ${order.token}`,handler:async()=>{await markPaid('RAZORPAY')}});r.open()}
+async function markPaid(method){if(!S.order)return;try{S.order=await api(`/api/orders/${S.order.id}/pay`,{method:'POST',body:JSON.stringify({method})});showOrder();toast('✓ Payment recorded. Print unlocked.')}catch(e){toast(e.message)}}
+function showOrder(){orderBox.classList.remove('hidden');orderToken.textContent=S.order.token;orderMeta.textContent=`${S.order.id} · ${S.order.status} · ₹${Number(S.order.amount).toFixed(2)} · ${S.order.paymentStatus}`;releasePin.textContent=S.order.releasePin}
+async function startPrint(){if(!S.order){toast('Create an order first');return}try{const d=await api(`/api/orders/${S.order.id}/print`,{method:'POST',body:'{}'});S.order=d.order;showOrder();printStatus.textContent='🖨️ Printing started. Document will open in the browser print dialog.';const w=window.open(d.fileUrl,'_blank');if(w){setTimeout(()=>{try{w.print()}catch{}},1200)}toast('Print job started')}catch(e){toast(e.message)}}
+async function saveFulfillment(){if(!S.order)return;try{S.order=await api(`/api/orders/${S.order.id}/fulfillment`,{method:'POST',body:JSON.stringify({type:fulfillmentType.value,address:deliveryAddress.value})});showOrder();toast('✓ Fulfillment saved')}catch(e){toast(e.message)}}
+async function cancelOrder(){if(!S.order)return;try{S.order=await api(`/api/orders/${S.order.id}/cancel`,{method:'POST',body:JSON.stringify({reason:'Customer requested cancellation'})});showOrder();toast('Order cancelled. Refund can be processed by the payment gateway.')}catch(e){toast(e.message)}}
+async function loadShops(){const shops=await api('/api/shops');shopSelect.innerHTML=shops.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('');shopSelect.value=S.shop;shopSelect.onchange=()=>{S.shop=shopSelect.value;loadSettings();toast('Shop changed: '+S.shop)}}
+async function loadSettings(){try{S.settings=await api('/api/settings');bwRate.textContent='₹'+S.settings.rateBw+'/page';colorRate.textContent='₹'+S.settings.rateColor+'/page';recalc()}catch{}}
+async function refreshDashboard(){try{const d=await api('/api/dashboard');statOrders.textContent=d.stats.orders;statRevenue.textContent='₹'+d.stats.revenue.toFixed(2);statCompleted.textContent=d.stats.completed;statPending.textContent=d.stats.pending;shopIdLabel.textContent=d.shop_id;ordersTable.innerHTML=d.recent.length?`<table class="w-full text-xs"><thead><tr class="text-slate-500 text-left"><th class="p-2">TOKEN</th><th>ORDER</th><th>STATUS</th><th>AMOUNT</th></tr></thead><tbody>${d.recent.map(o=>`<tr class="border-t border-white/5"><td class="p-2 mono font-bold text-cyan-300">${esc(o.token)}</td><td>${esc(o.id)}</td><td>${esc(o.status)}</td><td>₹${Number(o.amount).toFixed(2)}</td></tr>`).join('')}</tbody></table>`:'<div class="text-slate-500 text-sm p-3">No orders yet.</div>';printerStatus.innerHTML=d.printers.map(p=>`<div class="glass2 rounded-xl p-3"><div class="flex justify-between"><b>${esc(p.name)}</b><span class="text-emerald-300">${esc(p.status)}</span></div><div class="text-[10px] text-slate-500 mt-1">${esc(p.model||'')}</div></div>`).join('');inventory.innerHTML=`<div class="flex justify-between"><span>A4 Paper</span><b>${d.inventory.paperA4}</b></div><div class="flex justify-between"><span>A3 Paper</span><b>${d.inventory.paperA3}</b></div><div class="flex justify-between"><span>Black Toner</span><b>${d.inventory.tonerBlack}%</b></div><div class="flex justify-between"><span>Colour Toner</span><b>${d.inventory.tonerColor}%</b></div>`;rBw.value=S.settings.rateBw;rColor.value=S.settings.rateColor;rTax.value=S.settings.tax;rDisc.value=S.settings.discount}catch(e){toast(e.message)}}
+async function saveRates(){try{await api('/api/settings',{method:'PUT',body:JSON.stringify({rateBw:rBw.value,rateColor:rColor.value,tax:rTax.value,discount:rDisc.value})});await loadSettings();toast('✓ Controls saved')}catch(e){toast(e.message)}}
+function exportDb(){location.href='/api/owner/export'}
+async function cleanup(){try{const d=await api('/api/cleanup',{method:'POST',body:'{}'});toast(`✓ Cleanup complete · ${d.deleted} files removed`)}catch(e){toast(e.message)}}
+async function addStaff(){const name=prompt('Staff name?');if(!name)return;try{await api('/api/staff',{method:'POST',body:JSON.stringify({name})});toast('✓ Staff added')}catch(e){toast(e.message)}}
+async function addShop(){const name=prompt('Shop name?');if(!name)return;try{const id=prompt('Shop ID?','SHOP-'+Math.floor(Math.random()*900+100));await api('/api/shops',{method:'POST',body:JSON.stringify({id,name})});await loadShops();toast('✓ Shop added')}catch(e){toast(e.message)}}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+langSelect.addEventListener('change',()=>toast(langSelect.value==='hi'?'भाषा हिन्दी चुनी गई':langSelect.value==='mr'?'भाषा मराठी चुनी गई':'English selected'));
+window.addEventListener('load',async()=>{try{await api('/api/health');await loadShops();await loadSettings();toast('✓ ScanPrint backend connected')}catch(e){toast('Backend connection failed')}})
+</script>
+</body></html>
